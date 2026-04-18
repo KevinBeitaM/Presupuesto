@@ -17,11 +17,29 @@ class MovimientoViewModel: ViewModel() {
     var monto by mutableStateOf("")
     var tipo by mutableStateOf("")
     var fecha by mutableStateOf("")
-    var montoError by  mutableStateOf(true)
+    var montoError by mutableStateOf(false)
+    var tipoError by mutableStateOf(false)
+    var fechaError by mutableStateOf(false)
+    var movimientoEditandoId by mutableStateOf<String?>(null)
+    val esEdicion: Boolean
+        get() = movimientoEditandoId != null
 
     fun abrirDialog(){
+        movimientoEditandoId = null
         showDialog = true
     }
+
+    fun abrirDialogParaEditar(movimiento: Movimiento) {
+        movimientoEditandoId = movimiento.id
+        monto = movimiento.monto.toString()
+        tipo = movimiento.tipo
+        fecha = movimiento.fecha
+        montoError = false
+        tipoError = false
+        fechaError = false
+        showDialog = true
+    }
+
     fun cerrarDialog(){
         showDialog = false
         limpiarFormulario()
@@ -44,17 +62,64 @@ class MovimientoViewModel: ViewModel() {
         repo.eliminarMovimiento(id)
     }
     fun guardarMovimiento(){
-        val movimiento = Movimiento(
-            monto= monto.toDouble(),
-            tipo= tipo,
-            fecha= fecha)
-        repo.guardarMovimiento(movimiento)
+        // Validar campos
+        var esValido = true
+
+        if (monto.isBlank()) {
+            montoError = true
+            esValido = false
+        } else {
+            // Validar que solo contenga números y puntos
+            if (!monto.matches(Regex("^\\d+(\\.\\d+)?$"))) {
+                montoError = true
+                esValido = false
+            } else {
+                montoError = false
+            }
+        }
+
+        if (tipo.isBlank()) {
+            tipoError = true
+            esValido = false
+        } else {
+            tipoError = false
+        }
+
+        if (fecha.isBlank()) {
+            fechaError = true
+            esValido = false
+        } else {
+            fechaError = false
+        }
+
+        // Solo guardar si es válido
+        if (esValido) {
+            val movimiento = Movimiento(
+                id = movimientoEditandoId ?: "",
+                monto = monto.toDouble(),
+                tipo = tipo,
+                fecha = fecha
+            )
+
+            if (esEdicion) {
+                repo.actualizarMovimiento(movimiento)
+            } else {
+                repo.guardarMovimiento(movimiento)
+            }
+
+            cerrarDialog()
+            // Recargar movimientos después de guardar para asegurar que aparezcan
+            cargarMovimientos()
+        }
     }
     fun limpiarFormulario(){
         monto = ""
         tipo = ""
         fecha = ""
-
+        montoError = false
+        tipoError = false
+        fechaError = false
+        movimientoEditandoId = null
     }
 
 }

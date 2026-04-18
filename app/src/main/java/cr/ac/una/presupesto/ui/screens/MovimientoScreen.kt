@@ -12,6 +12,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -19,8 +22,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import cr.ac.una.presupesto.viewmodel.MovimientoViewModel
 
@@ -28,6 +32,8 @@ import cr.ac.una.presupesto.viewmodel.MovimientoViewModel
 fun MovimientoScreen(
     viewModel: MovimientoViewModel
 ) {
+    val movimientoPendienteEliminar = remember { mutableStateOf<String?>(null) }
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = { viewModel.abrirDialog() }) {
@@ -65,7 +71,13 @@ fun MovimientoScreen(
                                 Text(text = "Fecha: ${mov.fecha}")
                             }
                             Spacer(modifier = Modifier.weight(1f))
-                            IconButton(onClick = { viewModel.eliminar(mov.id) }) {
+                            IconButton(onClick = { viewModel.abrirDialogParaEditar(mov) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Editar"
+                                )
+                            }
+                            IconButton(onClick = { movimientoPendienteEliminar.value = mov.id }) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = "Eliminar"
@@ -76,6 +88,29 @@ fun MovimientoScreen(
                         }
                     }
                 }
+            }
+
+            if (movimientoPendienteEliminar.value != null) {
+                AlertDialog(
+                    onDismissRequest = { movimientoPendienteEliminar.value = null },
+                    title = { Text("Confirmar eliminación") },
+                    text = { Text("¿Seguro que deseas eliminar este movimiento?") },
+                    confirmButton = {
+                        Button(onClick = {
+                            movimientoPendienteEliminar.value?.let { id ->
+                                viewModel.eliminar(id)
+                            }
+                            movimientoPendienteEliminar.value = null
+                        }) {
+                            Text("Eliminar")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { movimientoPendienteEliminar.value = null }) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
             }
         }
     }

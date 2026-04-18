@@ -1,47 +1,141 @@
 package cr.ac.una.presupesto.ui.screens
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import cr.ac.una.presupesto.viewmodel.MovimientoViewModel
 
 @Composable
-@Suppress("UNUSED", "UNUSED_PARAMETER")
 fun MovimientoDialog(
     viewModel: MovimientoViewModel
 ) {
+    val opciones = listOf("Ingreso", "Egreso")
+    val context = LocalContext.current
+    val expandedTipo = remember { mutableStateOf(false) }
+
     AlertDialog(
         onDismissRequest = { viewModel.cerrarDialog() },
         title = {
-            Text("Nuevo Movimiento")
+            Text(if (viewModel.esEdicion) "Editar Movimiento" else "Nuevo Movimiento")
         },
         text = {
-            Column {
+            Column(modifier = Modifier.padding(8.dp)) {
+                // Campo Monto
                 OutlinedTextField(
                     value= viewModel.monto,
-                    onValueChange = {viewModel.monto= it },
-                    label = { Text("Ingrese un Monto") },
+                    onValueChange = { newValue ->
+                        // Solo permitir números y puntos
+                        if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
+                            viewModel.monto = newValue
+                        }
+                    },
+                    label = { Text("Monto") },
+                    placeholder = { Text("0.00") },
                     isError = viewModel.montoError,
                     supportingText = {
                         if (viewModel.montoError) {
-                            Text("El monto no puede estar vacío")
+                            Text("El monto no puede estar vacío y debe ser un número")
                         }
-
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
                 )
+
+                // Campo Tipo - ComboBox (Dropdown)
                 OutlinedTextField(
                     value = viewModel.tipo,
-                    onValueChange = {viewModel.tipo= it },
-                    label = { Text("Ingrese un Tipo") }
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Tipo") },
+                    placeholder = { Text("Seleccionar") },
+                    trailingIcon = {
+                        IconButton(onClick = { expandedTipo.value = !expandedTipo.value }) {
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Desplegar")
+                        }
+                    },
+                    isError = viewModel.tipoError,
+                    supportingText = {
+                        if (viewModel.tipoError) {
+                            Text("Debe seleccionar un tipo")
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
                 )
+
+                DropdownMenu(
+                    expanded = expandedTipo.value,
+                    onDismissRequest = { expandedTipo.value = false },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    opciones.forEach { opcion ->
+                        DropdownMenuItem(
+                            text = { Text(opcion) },
+                            onClick = {
+                                viewModel.tipo = opcion
+                                expandedTipo.value = false
+                            }
+                        )
+                    }
+                }
+
+                // Campo Fecha
                 OutlinedTextField(
                     value = viewModel.fecha,
-                    onValueChange = {viewModel.fecha= it },
-                    label = { Text("Ingrese una Fecha") }
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Fecha") },
+                    placeholder = { Text("DD/MM/YYYY") },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            // Abre calendario del sistema
+                            val c = java.util.Calendar.getInstance()
+                            val datePickerDialog = android.app.DatePickerDialog(
+                                android.view.ContextThemeWrapper(
+                                    context,
+                                    android.R.style.Theme_Material_Light_Dialog
+                                ),
+                                { _, year, month, dayOfMonth ->
+                                    val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                                    val calendar = java.util.Calendar.getInstance()
+                                    calendar.set(year, month, dayOfMonth)
+                                    viewModel.fecha = sdf.format(calendar.time)
+                                },
+                                c.get(java.util.Calendar.YEAR),
+                                c.get(java.util.Calendar.MONTH),
+                                c.get(java.util.Calendar.DAY_OF_MONTH)
+                            )
+                            datePickerDialog.show()
+                        }) {
+                            Icon(Icons.Default.DateRange, contentDescription = "Seleccionar fecha")
+                        }
+                    },
+                    isError = viewModel.fechaError,
+                    supportingText = {
+                        if (viewModel.fechaError) {
+                            Text("La fecha no puede estar vacía")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         },
@@ -49,8 +143,8 @@ fun MovimientoDialog(
             Button(
                 onClick = {
                     viewModel.guardarMovimiento()
-                    viewModel.cerrarDialog() }) {
-                Text("Guardar")
+                }) {
+                Text(if (viewModel.esEdicion) "Actualizar" else "Guardar")
 
             }
         },
