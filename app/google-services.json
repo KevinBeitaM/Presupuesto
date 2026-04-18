@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "548975218718",
+    "firebase_url": "https://moviles-kevin-default-rtdb.firebaseio.com",
+    "project_id": "moviles-kevin",
+    "storage_bucket": "moviles-kevin.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:548975218718:android:98674e3128d312ecb39e0f",
+        "android_client_info": {
+          "package_name": "cr.ac.una.presupesto"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9Z7LZkF830ldlsbbdnGZ7KnHzkfMB6Fg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
