@@ -61,5 +61,8 @@ dependencies {
     implementation(libs.google.firebase.database.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.firebase.analytics)
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
 
 }

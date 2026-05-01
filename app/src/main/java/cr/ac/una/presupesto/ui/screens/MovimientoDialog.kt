@@ -1,8 +1,13 @@
 package cr.ac.una.presupesto.ui.screens
 
+import android.Manifest
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material.icons.Icons
@@ -17,17 +22,42 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import cr.ac.una.presupesto.util.crearUriImagen
 import cr.ac.una.presupesto.viewmodel.MovimientoViewModel
 
 @Composable
 fun MovimientoDialog(
     viewModel: MovimientoViewModel
 ) {
-    val opciones = listOf("Ingreso", "Egreso")
     val context = LocalContext.current
+    var localUri by remember { mutableStateOf<Uri?>(null) }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+    ) { success ->
+        if (success) {
+            viewModel.imagenUri = localUri
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract =
+            ActivityResultContracts.RequestPermission()
+    ){ granted ->
+        if (granted){
+            var uri = crearUriImagen(context)
+            localUri = uri
+            cameraLauncher.launch(uri)
+        }
+    }
+
+    val opciones = listOf("Ingreso", "Egreso")
     val expandedTipo = remember { mutableStateOf(false) }
 
     AlertDialog(
@@ -39,7 +69,7 @@ fun MovimientoDialog(
             Column(modifier = Modifier.padding(8.dp)) {
                 // Campo Monto
                 OutlinedTextField(
-                    value= viewModel.monto,
+                    value = viewModel.monto,
                     onValueChange = { newValue ->
                         // Solo permitir números y puntos
                         if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
@@ -137,6 +167,19 @@ fun MovimientoDialog(
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
+                Button(
+                    onClick = {
+                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                ) {
+                    Text("Tomar foto")
+                }
+                viewModel.imagenUri?.let {
+                    AsyncImage(
+                        model = it,
+                        contentDescription = "Foto" ,
+                        modifier = Modifier.size(120.dp),)
+                }
             }
         },
         confirmButton = {

@@ -1,5 +1,6 @@
 package cr.ac.una.presupesto.viewmodel
 
+import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.getValue
@@ -12,6 +13,7 @@ class MovimientoViewModel: ViewModel() {
     private val repo= MovimientoRepository()
     var listaMovimientos =
         mutableStateListOf<Movimiento>()
+    var imagenUri by mutableStateOf<Uri?>(null)
     var showDialog by mutableStateOf(false)
 
     var monto by mutableStateOf("")
@@ -104,7 +106,7 @@ class MovimientoViewModel: ViewModel() {
             if (esEdicion) {
                 repo.actualizarMovimiento(movimiento)
             } else {
-                repo.guardarMovimiento(movimiento)
+                repo.guardarMovimientoConImagen(movimiento, imagenUri)
             }
 
             cerrarDialog()
@@ -120,6 +122,7 @@ class MovimientoViewModel: ViewModel() {
         tipoError = false
         fechaError = false
         movimientoEditandoId = null
+        imagenUri = null
     }
 
 }
