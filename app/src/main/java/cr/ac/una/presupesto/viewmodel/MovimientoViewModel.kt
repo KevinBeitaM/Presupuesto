@@ -13,37 +13,41 @@ class MovimientoViewModel: ViewModel() {
     private val repo= MovimientoRepository()
     var listaMovimientos =
         mutableStateListOf<Movimiento>()
-    var imagenUri by mutableStateOf<Uri?>(null)
-    var showDialog by mutableStateOf(false)
 
-    var monto by mutableStateOf("")
-    var tipo by mutableStateOf("")
-    var fecha by mutableStateOf("")
-    var montoError by mutableStateOf(false)
-    var tipoError by mutableStateOf(false)
-    var fechaError by mutableStateOf(false)
-    var movimientoEditandoId by mutableStateOf<String?>(null)
+    var uiState by mutableStateOf(MovimientosUiState())
+
     val esEdicion: Boolean
-        get() = movimientoEditandoId != null
+        get() = uiState.movimientoEditandoId != null
 
     fun abrirDialog(){
-        movimientoEditandoId = null
-        showDialog = true
+        uiState = uiState.copy(
+            movimientoEditandoId = null,
+            showDialog = true,
+            monto = "",
+            tipo = "",
+            fecha = "",
+            montoError = false,
+            tipoError = false,
+            fechaError = false,
+            imagenUri = null
+        )
     }
 
     fun abrirDialogParaEditar(movimiento: Movimiento) {
-        movimientoEditandoId = movimiento.id
-        monto = movimiento.monto.toString()
-        tipo = movimiento.tipo
-        fecha = movimiento.fecha
-        montoError = false
-        tipoError = false
-        fechaError = false
-        showDialog = true
+        uiState = uiState.copy(
+            movimientoEditandoId = movimiento.id,
+            monto = movimiento.monto.toString(),
+            tipo = movimiento.tipo,
+            fecha = movimiento.fecha,
+            montoError = false,
+            tipoError = false,
+            fechaError = false,
+            showDialog = true
+        )
     }
 
     fun cerrarDialog(){
-        showDialog = false
+        uiState = uiState.copy(showDialog = false)
         limpiarFormulario()
     }
 
@@ -63,66 +67,82 @@ class MovimientoViewModel: ViewModel() {
     fun eliminar(id: String){
         repo.eliminarMovimiento(id)
     }
-    fun guardarMovimiento(){
-        // Validar campos
-        var esValido = true
 
-        if (monto.isBlank()) {
+    fun actualizarMonto(nuevo: String) {
+        uiState = uiState.copy(monto = nuevo)
+    }
+
+    fun actualizarTipo(nuevo: String) {
+        uiState = uiState.copy(tipo = nuevo)
+    }
+
+    fun actualizarFecha(nuevo: String) {
+        uiState = uiState.copy(fecha = nuevo)
+    }
+
+    fun actualizarImagen(uri: Uri?) {
+        uiState = uiState.copy(imagenUri = uri)
+    }
+
+    fun guardarMovimiento(){
+        val estado = uiState
+        var montoError = false
+        var tipoError = false
+        var fechaError = false
+
+        if (estado.monto.isBlank()) {
             montoError = true
-            esValido = false
         } else {
-            // Validar que solo contenga números y puntos
-            if (!monto.matches(Regex("^\\d+(\\.\\d+)?$"))) {
+            if (!estado.monto.matches(Regex("^\\d+(\\.\\d+)?$"))) {
                 montoError = true
-                esValido = false
-            } else {
-                montoError = false
             }
         }
 
-        if (tipo.isBlank()) {
+        if (estado.tipo.isBlank()) {
             tipoError = true
-            esValido = false
-        } else {
-            tipoError = false
         }
 
-        if (fecha.isBlank()) {
+        if (estado.fecha.isBlank()) {
             fechaError = true
-            esValido = false
-        } else {
-            fechaError = false
         }
 
-        // Solo guardar si es válido
+        uiState = estado.copy(
+            montoError = montoError,
+            tipoError = tipoError,
+            fechaError = fechaError
+        )
+
+        val esValido = !montoError && !tipoError && !fechaError
         if (esValido) {
             val movimiento = Movimiento(
-                id = movimientoEditandoId ?: "",
-                monto = monto.toDouble(),
-                tipo = tipo,
-                fecha = fecha
+                id = estado.movimientoEditandoId ?: "",
+                monto = estado.monto.toDouble(),
+                tipo = estado.tipo,
+                fecha = estado.fecha
             )
 
             if (esEdicion) {
                 repo.actualizarMovimiento(movimiento)
             } else {
-                repo.guardarMovimientoConImagen(movimiento, imagenUri)
+                repo.guardarMovimientoConImagen(movimiento, estado.imagenUri)
             }
 
             cerrarDialog()
-            // Recargar movimientos después de guardar para asegurar que aparezcan
             cargarMovimientos()
         }
     }
+
     fun limpiarFormulario(){
-        monto = ""
-        tipo = ""
-        fecha = ""
-        montoError = false
-        tipoError = false
-        fechaError = false
-        movimientoEditandoId = null
-        imagenUri = null
+        uiState = uiState.copy(
+            monto = "",
+            tipo = "",
+            fecha = "",
+            montoError = false,
+            tipoError = false,
+            fechaError = false,
+            movimientoEditandoId = null,
+            imagenUri = null
+        )
     }
 
 }

@@ -4,6 +4,7 @@ import android.Manifest
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,13 +37,14 @@ fun MovimientoDialog(
     viewModel: MovimientoViewModel
 ) {
     val context = LocalContext.current
+    val uiState = viewModel.uiState
     var localUri by remember { mutableStateOf<Uri?>(null) }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
     ) { success ->
         if (success) {
-            viewModel.imagenUri = localUri
+            viewModel.actualizarImagen(localUri)
         }
     }
 
@@ -60,6 +62,26 @@ fun MovimientoDialog(
     val opciones = listOf("Ingreso", "Egreso")
     val expandedTipo = remember { mutableStateOf(false) }
 
+    val openDatePicker = {
+        val c = java.util.Calendar.getInstance()
+        val datePickerDialog = android.app.DatePickerDialog(
+            android.view.ContextThemeWrapper(
+                context,
+                android.R.style.Theme_Material_Light_Dialog
+            ),
+            { _, year, month, dayOfMonth ->
+                val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                val calendar = java.util.Calendar.getInstance()
+                calendar.set(year, month, dayOfMonth)
+                viewModel.actualizarFecha(sdf.format(calendar.time))
+            },
+            c.get(java.util.Calendar.YEAR),
+            c.get(java.util.Calendar.MONTH),
+            c.get(java.util.Calendar.DAY_OF_MONTH)
+        )
+        datePickerDialog.show()
+    }
+
     AlertDialog(
         onDismissRequest = { viewModel.cerrarDialog() },
         title = {
@@ -67,21 +89,19 @@ fun MovimientoDialog(
         },
         text = {
             Column(modifier = Modifier.padding(8.dp)) {
-                // Campo Monto
                 OutlinedTextField(
-                    value = viewModel.monto,
+                    value = uiState.monto,
                     onValueChange = { newValue ->
-                        // Solo permitir números y puntos
                         if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
-                            viewModel.monto = newValue
+                            viewModel.actualizarMonto(newValue)
                         }
                     },
                     label = { Text("Monto") },
                     placeholder = { Text("0.00") },
-                    isError = viewModel.montoError,
+                    isError = uiState.montoError,
                     supportingText = {
-                        if (viewModel.montoError) {
-                            Text("El monto no puede estar vacío y debe ser un número")
+                        if (uiState.montoError) {
+                            Text("El monto no puede estar vacio y debe ser un numero")
                         }
                     },
                     modifier = Modifier
@@ -89,9 +109,8 @@ fun MovimientoDialog(
                         .padding(bottom = 8.dp)
                 )
 
-                // Campo Tipo - ComboBox (Dropdown)
                 OutlinedTextField(
-                    value = viewModel.tipo,
+                    value = uiState.tipo,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Tipo") },
@@ -101,9 +120,9 @@ fun MovimientoDialog(
                             Icon(Icons.Default.ArrowDropDown, contentDescription = "Desplegar")
                         }
                     },
-                    isError = viewModel.tipoError,
+                    isError = uiState.tipoError,
                     supportingText = {
-                        if (viewModel.tipoError) {
+                        if (uiState.tipoError) {
                             Text("Debe seleccionar un tipo")
                         }
                     },
@@ -121,51 +140,33 @@ fun MovimientoDialog(
                         DropdownMenuItem(
                             text = { Text(opcion) },
                             onClick = {
-                                viewModel.tipo = opcion
+                                viewModel.actualizarTipo(opcion)
                                 expandedTipo.value = false
                             }
                         )
                     }
                 }
 
-                // Campo Fecha
                 OutlinedTextField(
-                    value = viewModel.fecha,
+                    value = uiState.fecha,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Fecha") },
                     placeholder = { Text("DD/MM/YYYY") },
                     trailingIcon = {
-                        IconButton(onClick = {
-                            // Abre calendario del sistema
-                            val c = java.util.Calendar.getInstance()
-                            val datePickerDialog = android.app.DatePickerDialog(
-                                android.view.ContextThemeWrapper(
-                                    context,
-                                    android.R.style.Theme_Material_Light_Dialog
-                                ),
-                                { _, year, month, dayOfMonth ->
-                                    val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
-                                    val calendar = java.util.Calendar.getInstance()
-                                    calendar.set(year, month, dayOfMonth)
-                                    viewModel.fecha = sdf.format(calendar.time)
-                                },
-                                c.get(java.util.Calendar.YEAR),
-                                c.get(java.util.Calendar.MONTH),
-                                c.get(java.util.Calendar.DAY_OF_MONTH)
-                            )
-                            datePickerDialog.show()
-                        }) {
+                        IconButton(onClick = { openDatePicker() }) {
                             Icon(Icons.Default.DateRange, contentDescription = "Seleccionar fecha")
                         }
                     },
-                    isError = viewModel.fechaError,
+                    isError = uiState.fechaError,
                     supportingText = {
-                        if (viewModel.fechaError) {
+                        if (uiState.fechaError) {
                             Text("La fecha no puede estar vacía")
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { openDatePicker() }
                 )
                 Button(
                     onClick = {
@@ -174,11 +175,12 @@ fun MovimientoDialog(
                 ) {
                     Text("Tomar foto")
                 }
-                viewModel.imagenUri?.let {
+                uiState.imagenUri?.let {
                     AsyncImage(
                         model = it,
-                        contentDescription = "Foto" ,
-                        modifier = Modifier.size(120.dp),)
+                        contentDescription = "Foto",
+                        modifier = Modifier.size(120.dp)
+                    )
                 }
             }
         },
