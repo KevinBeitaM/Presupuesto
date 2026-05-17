@@ -1,15 +1,17 @@
 package cr.ac.una.presupesto.viewmodel
 
+import android.app.Application
 import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import cr.ac.una.presupesto.data.model.Movimiento
 import cr.ac.una.presupesto.data.repository.MovimientoRepository
+import cr.ac.una.presupesto.util.LocationHelper
 
-class MovimientoViewModel: ViewModel() {
+class MovimientoViewModel (application: Application): AndroidViewModel(application) {
     private val repo= MovimientoRepository()
     var listaMovimientos =
         mutableStateListOf<Movimiento>()
@@ -114,21 +116,25 @@ class MovimientoViewModel: ViewModel() {
 
         val esValido = !montoError && !tipoError && !fechaError
         if (esValido) {
-            val movimiento = Movimiento(
-                id = estado.movimientoEditandoId ?: "",
-                monto = estado.monto.toDouble(),
-                tipo = estado.tipo,
-                fecha = estado.fecha
-            )
+            LocationHelper.obtenerUbicacion(getApplication()) { lat, lng ->
+                val movimiento = Movimiento(
+                    id = estado.movimientoEditandoId ?: "",
+                    monto = estado.monto.toDouble(),
+                    tipo = estado.tipo,
+                    fecha = estado.fecha,
+                    latitud = lat,
+                    longitud = lng
+                )
 
-            if (esEdicion) {
-                repo.actualizarMovimiento(movimiento)
-            } else {
-                repo.guardarMovimientoConImagen(movimiento, estado.imagenUri)
+                if (esEdicion) {
+                    repo.actualizarMovimiento(movimiento)
+                } else {
+                    repo.guardarMovimientoConImagen(movimiento, estado.imagenUri)
+                }
+
+                cerrarDialog()
+                cargarMovimientos()
             }
-
-            cerrarDialog()
-            cargarMovimientos()
         }
     }
 

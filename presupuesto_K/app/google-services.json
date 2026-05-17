@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "722728686695",
+    "firebase_url": "https://moviles-4c761-default-rtdb.firebaseio.com",
+    "project_id": "moviles-4c761",
+    "storage_bucket": "moviles-4c761.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:722728686695:android:3ae122de11b2dc7a9a30c2",
+        "android_client_info": {
+          "package_name": "cr.ac.una.presupuesto"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBw-dqXYO--wD09af0Bu1lh3J2ZMyYc5BA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

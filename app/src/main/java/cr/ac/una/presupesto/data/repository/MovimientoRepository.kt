@@ -39,41 +39,40 @@ class MovimientoRepository {
                     movimiento.imagenUrl = uri.toString()
                     guardarMovimiento(movimiento)
                 }
-
-            }
-
-
-        }
-
-        fun actualizarMovimiento(movimiento: Movimiento) {
-            db.child(movimiento.id).setValue(movimiento)
-        }
-
-        fun eliminarMovimiento(id: String) {
-            db.child(id).removeValue()
-        }
-
-        fun obtenerMovimientos(
-            onResult: (List<Movimiento>) -> Unit
-        ) {
-            db.addValueEventListener(
-                object : ValueEventListener {
-                    override fun onDataChange(p0: DataSnapshot) {
-                        val lista = mutableListOf<Movimiento>()
-                        for (dato in p0.children) {
-                            val mov =
-                                dato.getValue(Movimiento::class.java)
-                            mov?.let { lista.add(it) }
-                        }
-                        onResult(lista)
-
-                    }
-
-                    override fun onCancelled(p0: DatabaseError) {
-                        onResult(emptyList())
-                    }
-                }
-            )
-
+        } else {
+            guardarMovimiento(movimiento)
         }
     }
+
+    fun actualizarMovimiento(movimiento: Movimiento) {
+        db.child(movimiento.id).setValue(movimiento)
+    }
+
+    fun eliminarMovimiento(id: String) {
+        db.child(id).removeValue()
+    }
+
+    fun obtenerMovimientos(
+        onResult: (List<Movimiento>) -> Unit
+    ) {
+        db.addValueEventListener(
+            object : ValueEventListener {
+                override fun onDataChange(p0: DataSnapshot) {
+                    val lista = mutableListOf<Movimiento>()
+                    for (dato in p0.children) {
+                        val mov =
+                            dato.getValue(Movimiento::class.java)
+                        mov?.let { lista.add(it) }
+                    }
+                    onResult(lista)
+
+                }
+
+                override fun onCancelled(p0: DatabaseError) {
+                    onResult(emptyList())
+                }
+            }
+        )
+
+    }
+}

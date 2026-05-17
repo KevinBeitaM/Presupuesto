@@ -8,12 +8,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -40,7 +39,8 @@ fun MovimientoCard(
     movimiento: Movimiento,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onShowLocation: (Double, Double) -> Unit = { _, _ -> }
 ) {
     val formatter = remember {
         NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-CR")).apply {
@@ -96,6 +96,15 @@ fun MovimientoCard(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Editar",
                             tint = Color(0xFF1F1F1F)
+                        )
+                    }
+                    IconButton(onClick = {
+                        onShowLocation(movimiento.latitud ?: 0.0, movimiento.longitud ?: 0.0)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Ubicacion",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                     IconButton(onClick = onDelete) {

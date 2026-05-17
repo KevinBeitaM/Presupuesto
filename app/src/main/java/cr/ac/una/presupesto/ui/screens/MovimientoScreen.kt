@@ -16,6 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import cr.ac.una.presupesto.viewmodel.MovimientoViewModel
 
@@ -25,6 +27,25 @@ fun MovimientoScreen(
 ) {
     val movimientoPendienteEliminar = remember { mutableStateOf<String?>(null) }
     val uiState = viewModel.uiState
+    var mapaCords by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+
+    if (mapaCords != null) {
+        MapaScreen(
+            latitud = mapaCords!!.first,
+            longitud = mapaCords!!.second,
+            onVolver = { mapaCords = null }
+        )
+        return
+    }
+
+    val saldoTotal = viewModel.listaMovimientos.sumOf { mov ->
+        val tipo = mov.tipo.trim().lowercase()
+        if (tipo == "ingreso" || tipo == "crédito" || tipo == "credito") {
+            mov.monto
+        } else {
+            -mov.monto
+        }
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -46,11 +67,15 @@ fun MovimientoScreen(
             }
 
             LazyColumn {
+                item {
+                    SaldoTotalCard(saldo = saldoTotal)
+                }
                 items(viewModel.listaMovimientos) { mov ->
                     MovimientoCard(
                         movimiento = mov,
                         onEdit = { viewModel.abrirDialogParaEditar(mov) },
-                        onDelete = { movimientoPendienteEliminar.value = mov.id }
+                        onDelete = { movimientoPendienteEliminar.value = mov.id },
+                        onShowLocation = { lat, lng -> mapaCords = Pair(lat, lng) }
                     )
                 }
             }

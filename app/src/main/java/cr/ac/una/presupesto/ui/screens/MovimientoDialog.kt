@@ -48,16 +48,6 @@ fun MovimientoDialog(
         }
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract =
-            ActivityResultContracts.RequestPermission()
-    ){ granted ->
-        if (granted){
-            var uri = crearUriImagen(context)
-            localUri = uri
-            cameraLauncher.launch(uri)
-        }
-    }
 
     val opciones = listOf("Ingreso", "Egreso")
     val expandedTipo = remember { mutableStateOf(false) }
@@ -170,7 +160,10 @@ fun MovimientoDialog(
                 )
                 Button(
                     onClick = {
-                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                        var uri =
+                            crearUriImagen(context)
+                        localUri = uri
+                        cameraLauncher.launch(uri)
                     }
                 ) {
                     Text("Tomar foto")
